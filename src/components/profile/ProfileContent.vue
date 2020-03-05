@@ -92,11 +92,23 @@
 
 <script>
 import { mapState } from 'vuex';
-import { maxLength, minLength, sameAs } from 'vuelidate/lib/validators';
 
 import { GetUserInfo, UpdateUserInfo, UploadUserAvatar } from '@/api/v1/user';
 import { RoleMap } from '@/util/const';
 import { FromUnixSeconds } from '@/util/day';
+import { Validations, MapErrors } from '@/util/validation';
+
+const validations = {
+  username: {
+    ...Validations.username,
+  },
+  password: {
+    ...Validations.password,
+  },
+  confirmPassword: {
+    ...Validations.confirmPassword,
+  },
+};
 
 export default {
   data: function() {
@@ -115,43 +127,17 @@ export default {
     await this.fetchData();
   },
 
-  validations: {
-    username: {
-      maxLength: maxLength(24),
-      minLength: minLength(4),
-    },
-    password: {
-      maxLength: maxLength(18),
-      minLength: minLength(6),
-    },
-    confirmPassword: {
-      sameAs: sameAs('password'),
-    },
-  },
+  validations,
+
   computed: {
-    usernameErrors: function() {
-      const errors = [];
-      if (!this.$v.username.$dirty) return errors;
-      !this.$v.username.maxLength && errors.push('username is too long');
-      !this.$v.username.minLength && errors.push('username is too short');
-      return errors;
-    },
+    usernameErrors: MapErrors('username', validations.username),
 
-    passwordErrors: function() {
-      const errors = [];
-      if (!this.$v.password.$dirty) return errors;
-      !this.$v.password.maxLength && errors.push('Password is too long');
-      !this.$v.password.minLength && errors.push('Password is too short');
-      return errors;
-    },
+    passwordErrors: MapErrors('password', validations.password),
 
-    confirmPasswordErrors: function() {
-      const errors = [];
-      if (!this.$v.confirmPassword.$dirty) return errors;
-      !this.$v.confirmPassword.sameAs &&
-        errors.push('ConfirmPassword should be same as password');
-      return errors;
-    },
+    confirmPasswordErrors: MapErrors(
+      'confirmPassword',
+      validations.confirmPassword
+    ),
 
     roleName: function() {
       return RoleMap(this.role);

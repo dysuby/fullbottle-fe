@@ -45,14 +45,22 @@
 </template>
 
 <script>
-import {
-  required,
-  email,
-  maxLength,
-  minLength,
-} from 'vuelidate/lib/validators';
+import { required } from 'vuelidate/lib/validators';
 
 import { Login } from '@/api/v1/auth';
+
+import { Validations, MapErrors } from '@/util/validation';
+
+const validations = {
+  email: {
+    required,
+    ...Validations.email,
+  },
+  password: {
+    required,
+    ...Validations.password,
+  },
+};
 
 export default {
   data: () => ({
@@ -60,35 +68,12 @@ export default {
     password: '',
   }),
 
-  validations: {
-    email: {
-      required,
-      email,
-    },
-    password: {
-      required,
-      maxLength: maxLength(18),
-      minLength: minLength(6),
-    },
-  },
+  validations,
 
   computed: {
-    emailErrors: function() {
-      const errors = [];
-      if (!this.$v.email.$dirty) return errors;
-      !this.$v.email.required && errors.push('Email is required');
-      !this.$v.email.email && errors.push('Invalid email');
-      return errors;
-    },
+    emailErrors: MapErrors('email', validations.email),
 
-    passwordErrors: function() {
-      const errors = [];
-      if (!this.$v.password.$dirty) return errors;
-      !this.$v.password.required && errors.push('Password is required');
-      !this.$v.password.maxLength && errors.push('Password is too long');
-      !this.$v.password.minLength && errors.push('Password is too short');
-      return errors;
-    },
+    passwordErrors: MapErrors('password', validations.password),
   },
 
   methods: {

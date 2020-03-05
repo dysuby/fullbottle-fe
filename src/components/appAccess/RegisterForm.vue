@@ -66,15 +66,30 @@
 </template>
 
 <script>
-import {
-  required,
-  email,
-  maxLength,
-  minLength,
-  sameAs,
-} from 'vuelidate/lib/validators';
+import { required } from 'vuelidate/lib/validators';
 
 import { Register } from '@/api/v1/auth';
+
+import { Validations, MapErrors } from '@/util/validation';
+
+const validations = {
+  email: {
+    required,
+    ...Validations.email,
+  },
+  username: {
+    required,
+    ...Validations.username,
+  },
+  password: {
+    required,
+    ...Validations.password,
+  },
+  confirmPassword: {
+    required,
+    ...Validations.confirmPassword,
+  },
+};
 
 export default {
   data: function() {
@@ -86,63 +101,19 @@ export default {
     };
   },
 
-  validations: {
-    email: {
-      required,
-      email,
-    },
-    username: {
-      required,
-      maxLength: maxLength(24),
-      minLength: minLength(4),
-    },
-    password: {
-      required,
-      maxLength: maxLength(18),
-      minLength: minLength(6),
-    },
-    confirmPassword: {
-      required,
-      sameAs: sameAs('password'),
-    },
-  },
+  validations,
 
   computed: {
-    emailErrors: function() {
-      const errors = [];
-      if (!this.$v.email.$dirty) return errors;
-      !this.$v.email.required && errors.push('Email is required');
-      !this.$v.email.email && errors.push('Invalid email');
-      return errors;
-    },
+    emailErrors: MapErrors('email', validations.email),
 
-    usernameErrors: function() {
-      const errors = [];
-      if (!this.$v.username.$dirty) return errors;
-      !this.$v.username.required && errors.push('username is required');
-      !this.$v.username.maxLength && errors.push('username is too long');
-      !this.$v.username.minLength && errors.push('username is too short');
-      return errors;
-    },
+    usernameErrors: MapErrors('username', validations.username),
 
-    passwordErrors: function() {
-      const errors = [];
-      if (!this.$v.password.$dirty) return errors;
-      !this.$v.password.required && errors.push('Password is required');
-      !this.$v.password.maxLength && errors.push('Password is too long');
-      !this.$v.password.minLength && errors.push('Password is too short');
-      return errors;
-    },
+    passwordErrors: MapErrors('password', validations.password),
 
-    confirmPasswordErrors: function() {
-      const errors = [];
-      if (!this.$v.confirmPassword.$dirty) return errors;
-      !this.$v.confirmPassword.required &&
-        errors.push('ConfirmPassword is required');
-      !this.$v.confirmPassword.sameAs &&
-        errors.push('ConfirmPassword should be same as password');
-      return errors;
-    },
+    confirmPasswordErrors: MapErrors(
+      'confirmPassword',
+      validations.confirmPassword
+    ),
   },
 
   methods: {

@@ -9,30 +9,8 @@ const service = axios.create({
   withCredentials: true,
 });
 
-const queue = [];
-const cancelToken = axios.CancelToken;
-const requestUrl = config => `${config.url}_${config.method}`;
-
-const removeQueue = config => {
-  queue.forEach((item, index) => {
-    if (item.requestUrl === requestUrl(config)) {
-      item.cancel();
-      queue.splice(index, 1);
-    }
-  });
-};
-
 service.interceptors.request.use(
   config => {
-    // 中断重复请求
-    removeQueue(config);
-    config.cancelToken = new cancelToken(c => {
-      queue.push({
-        requestUrl: requestUrl(config),
-        cancel: c,
-      });
-    });
-
     const authInfo = store.state.authInfo;
     if (authInfo) {
       config.headers['authorization'] = `Bearer ${authInfo.token}`;
@@ -47,16 +25,18 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
   response => {
-    // 请求完成后从队列中删除
-    removeQueue(response.config);
     return response;
   },
   error => {
+    if (axios.isCancel(error)) {
+      return;
+    }
+
     if (error.response) {
       // token invalid
       if (error.response.status === 401) {
         localStorage.clear();
-        store.commit('clearAuthInfo');
+        store.commit('logout');
 
         router.push({
           path: '/login',

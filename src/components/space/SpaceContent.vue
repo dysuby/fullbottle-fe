@@ -4,6 +4,8 @@
       v-model="selected"
       :headers="headers"
       :items="entries"
+      :loading="loading"
+      loading-text="loading..."
       item-key="folder_id"
       show-select
       disable-pagination
@@ -70,6 +72,7 @@ const InitPaths = () => [{ id: VIRTUAL_ROOT, text: 'home', disabled: false }];
 export default {
   data: function() {
     return {
+      loading: true,
       selected: [],
       paths: InitPaths(),
       headers: [
@@ -93,6 +96,7 @@ export default {
 
   created: async function() {
     await this.fetchData();
+    this.loading = false;
   },
 
   computed: {
@@ -103,7 +107,9 @@ export default {
 
   watch: {
     $route: async function() {
+      this.loading = true;
       await this.fetchData();
+      this.loading = false;
     },
   },
 

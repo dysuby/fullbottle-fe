@@ -6,8 +6,10 @@ export default {
     state.authInfo = JSON.parse(ls);
   },
 
-  clearAuthInfo: function(state) {
+  logout: function(state) {
     state.authInfo = null;
+    state.currentFolder = {};
+    state.userAvatar = '/default.png';
   },
 
   updateAvatar: function(state) {

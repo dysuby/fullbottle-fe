@@ -26,15 +26,33 @@
 <script>
 import { mapState } from 'vuex';
 
+import { GetUserInfo } from '@/api/v1/user';
+
 export default {
   computed: mapState(['userAvatar']),
 
   methods: {
     logout: function() {
-      this.$store.commit('clearAuthInfo');
+      this.$store.commit('logout');
       localStorage.removeItem('auth-info');
       this.$router.push('/login');
     },
+
+    fetchProfile: async function() {
+      try {
+        const resp = await GetUserInfo();
+        const data = resp.data.user;
+        if (data.avatar_fid) {
+          this.$store.commit('updateAvatar');
+        }
+      } catch (error) {
+        this.$toast.error(error.msg);
+      }
+    },
+  },
+
+  created: async function() {
+    await this.fetchProfile();
   },
 };
 </script>

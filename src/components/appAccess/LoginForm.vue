@@ -83,7 +83,7 @@ export default {
       }
       try {
         const resp = await Login(this.$data);
-        this.$toast.success(resp.data.msg);
+
         // store auth info
         localStorage.setItem('auth-info', JSON.stringify(resp.data));
         this.$store.commit('updateAuthInfo');

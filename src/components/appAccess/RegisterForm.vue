@@ -122,8 +122,8 @@ export default {
         return;
       }
       try {
-        const resp = await Register(this.$data);
-        this.$toast.success(resp.data);
+        await Register(this.$data);
+        this.$toast.success('Success');
         this.$router.push('login');
       } catch (error) {
         this.$toast.error(error.msg);

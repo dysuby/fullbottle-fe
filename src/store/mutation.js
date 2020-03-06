@@ -14,4 +14,8 @@ export default {
     state.userAvatar =
       GetUserAvatarSrc(state.authInfo.uid) + `&r=${Math.random()}`;
   },
+
+  setCurrentFolder: function(state, folder_info) {
+    state.currentFolder = folder_info;
+  },
 };

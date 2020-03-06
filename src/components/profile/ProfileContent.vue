@@ -202,6 +202,7 @@ export default {
         }
         await UploadUserAvatar(file);
         this.$store.commit('updateAvatar');
+        this.$toast.success('Success');
       } catch (error) {
         this.$toast.error(error.msg);
       }

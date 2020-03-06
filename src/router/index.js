@@ -12,6 +12,10 @@ Vue.use(VueRouter);
 
 const routes = [
   {
+    path: '/',
+    redirect: '/space',
+  },
+  {
     name: 'login',
     path: '/login',
     component: AppAccess,
@@ -27,8 +31,7 @@ const routes = [
   },
   {
     name: 'space',
-    path: '/',
-    alias: '/space',
+    path: '/space/:fid?',
     component: SpaceView,
     meta: { requiresAuth: true },
   },

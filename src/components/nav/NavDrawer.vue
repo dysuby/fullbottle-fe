@@ -28,6 +28,7 @@
 </template>
 
 <script>
+import { GetUserInfo } from '@/api/v1/user';
 import { GetSpaceMeta } from '@/api/v1/bottle';
 import { SizeUnitConv } from '@/util/file';
 
@@ -47,14 +48,7 @@ export default {
   },
 
   created: async function() {
-    try {
-      const resp = await GetSpaceMeta();
-      const meta = resp.data.meta;
-      this.capacity = meta.capacity;
-      this.remain = meta.remain;
-    } catch (error) {
-      this.$toast.error(error.msg);
-    }
+    await this.fetchMeta();
   },
 
   computed: {
@@ -73,6 +67,29 @@ export default {
   },
 
   methods: {
+    fetchMeta: async function() {
+      try {
+        const resp = await GetSpaceMeta();
+        const meta = resp.data.meta;
+        this.capacity = meta.capacity;
+        this.remain = meta.remain;
+      } catch (error) {
+        this.$toast.error(error.msg);
+      }
+    },
+
+    fetchProfile: async function() {
+      try {
+        const resp = await GetUserInfo();
+        const data = resp.data.user;
+        if (data.avatar_fid) {
+          this.$store.commit('updateAvatar');
+        }
+      } catch (error) {
+        this.$toast.error(error.msg);
+      }
+    },
+
     sizeString: function(s) {
       const conv = SizeUnitConv(s);
       return `${conv.value}${conv.unit}`;

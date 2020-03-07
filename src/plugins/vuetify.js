@@ -15,6 +15,8 @@ Vue.use(Vuetify, {
 Vue.use(VuetifyToast, {
   x: 'center',
   y: 'top',
+  showClose: true,
+  closeColor: 'white',
 });
 
 export default new Vuetify({});

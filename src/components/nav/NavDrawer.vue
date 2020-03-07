@@ -2,13 +2,13 @@
   <v-navigation-drawer v-model="drawerOn" app clipped>
     <v-list nav>
       <v-list-item-group color="primary">
-        <v-list-item link to="/space">
+        <v-list-item link to="/home/space">
           <v-list-item-icon>
             <v-icon>mdi-folder</v-icon>
           </v-list-item-icon>
           <v-list-item-title>Space</v-list-item-title>
         </v-list-item>
-        <v-list-item link to="/profile">
+        <v-list-item link to="/home/profile">
           <v-list-item-icon>
             <v-icon>mdi-account</v-icon>
           </v-list-item-icon>

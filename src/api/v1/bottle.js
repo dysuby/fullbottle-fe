@@ -30,3 +30,47 @@ export function GetFolderParents(fid) {
     url: `/v1/space/folders/parents?folder_id=${fid}`,
   });
 }
+
+export function CreateFolder({ name, parent_id }) {
+  return axios({
+    url: `/v1/space/folders`,
+    data: { name, parent_id },
+    method: 'POST',
+  });
+}
+
+export function UpdateFolder({ folder_id, name, parent_id }) {
+  return axios({
+    url: `/v1/space/folders`,
+    data: { folder_id, name, parent_id },
+    method: 'PUT',
+  });
+}
+
+export function UpdateFile({ file_id, name, folder_id }) {
+  return axios({
+    url: `/v1/space/files`,
+    data: { file_id, name, folder_id },
+    method: 'PUT',
+  });
+}
+
+export function DeleteFolder(fid) {
+  if (!fid) return Promise.reject({ msg: 'fid undefined' });
+
+  return axios({
+    url: `/v1/space/folders`,
+    data: { folder_id: fid },
+    method: 'DELETE',
+  });
+}
+
+export function Deletefile(fid) {
+  if (!fid) return Promise.reject({ msg: 'fid undefined' });
+
+  return axios({
+    url: `/v1/space/files`,
+    data: { file_id: fid },
+    method: 'DELETE',
+  });
+}

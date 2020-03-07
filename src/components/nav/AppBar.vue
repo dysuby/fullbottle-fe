@@ -6,7 +6,7 @@
     <v-toolbar-title>FullBottle</v-toolbar-title>
 
     <v-spacer></v-spacer>
-    <v-btn icon large to="/profile">
+    <v-btn icon large to="/home/profile">
       <v-avatar size="32px" item>
         <v-img :src="userAvatar" alt="Avatar"></v-img>
       </v-avatar>

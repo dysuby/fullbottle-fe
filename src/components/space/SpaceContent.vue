@@ -6,7 +6,7 @@
       :items="entries"
       :loading="loading"
       loading-text="loading..."
-      item-key="folder_id"
+      item-key="key"
       show-select
       disable-pagination
       disable-sort
@@ -18,7 +18,7 @@
           Upload
           <v-icon right dark>mdi-cloud-upload</v-icon>
         </v-btn>
-        <v-btn color="info" class="mr-4 white--text">
+        <v-btn color="info" class="mr-4 white--text" @click="createFolder">
           New Folder
           <v-icon right dark>mdi-folder</v-icon>
         </v-btn>
@@ -29,7 +29,7 @@
           <v-col>
             <v-breadcrumbs :items="paths" large class="less-border">
               <template v-slot:item="{ item }">
-                <span :class="breadcrumbsClass(item)" @click="jumpFolder(item.id)">{{item.text}}</span>
+                <span :class="breadcrumbsClass(item)" @click="breadcrumbsClick(item)">{{item.text}}</span>
               </template>
             </v-breadcrumbs>
           </v-col>
@@ -49,11 +49,25 @@
       <template v-slot:item.size="{ item }">{{ formaatSize(item.size) }}</template>
 
       <template v-slot:item.action="{ item }">
-        <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
+        <v-icon small class="mr-2" @click="editEntry(item)">mdi-pencil</v-icon>
+        <v-icon small @click="deleteEntry(item)">mdi-delete</v-icon>
       </template>
       <template v-slot:no-data>You have no files here</template>
     </v-data-table>
+
+    <delete-dialog v-model="showDelete" :entry="focusDeleteEntry" @refresh="fetchData(true)"></delete-dialog>
+
+    <create-folder-dialog
+      v-model="showCreateFolder"
+      :parent_id="currentFolderId"
+      @refresh="fetchData(true)"
+    ></create-folder-dialog>
+
+    <update-entry-dialog
+      v-model="showUpdateEntry"
+      :entry="focusUpdateEntry"
+      @refresh="fetchData(true)"
+    ></update-entry-dialog>
   </v-container>
 </template>
 
@@ -91,30 +105,59 @@ export default {
       ],
       folders: [],
       files: [],
+
+      showDelete: false,
+      focusDeleteEntry: { type: 'folder' },
+
+      showCreateFolder: false,
+
+      showUpdateEntry: false,
+      focusUpdateEntry: { type: 'folder' },
     };
+  },
+
+  components: {
+    DeleteDialog: () => import('@/components/space/DeleteDialog.vue'),
+    CreateFolderDialog: () =>
+      import('@/components/space/CreateFolderDialog.vue'),
+    UpdateEntryDialog: () => import('@/components/space/UpdateEntryDialog.vue'),
   },
 
   created: async function() {
     await this.fetchData();
-    this.loading = false;
   },
 
   computed: {
     entries: function() {
-      return [...this.folders, ...this.files];
+      // to view data
+      const folder = this.folders
+        ? this.folders.map(v => ({
+            ...v,
+            type: 'folder',
+            key: `folder:${v.id}`,
+          }))
+        : [];
+      const files = this.files
+        ? this.files.map(v => ({ ...v, type: 'file', key: `file:${v.id}` }))
+        : [];
+
+      return [...folder, ...files];
+    },
+
+    currentFolderId: function() {
+      return this.paths[this.paths.length - 1].id;
     },
   },
 
   watch: {
     $route: async function() {
-      this.loading = true;
       await this.fetchData();
-      this.loading = false;
     },
   },
 
   methods: {
-    fetchData: async function() {
+    fetchData: async function(force = false) {
+      this.loading = true;
       const path = this.$route.query.path;
 
       try {
@@ -122,9 +165,10 @@ export default {
         let parent;
         // check if has cache
         if (
+          !force &&
           id &&
-          this.$store.state.currentFolder.folder_id &&
-          id === this.$store.state.currentFolder.folder_id
+          this.$store.state.currentFolder.id &&
+          id === this.$store.state.currentFolder.id
         ) {
           parent = this.$store.state.currentFolder;
         } else {
@@ -140,26 +184,22 @@ export default {
 
         // cache
         this.$store.commit('setCurrentFolder', parent);
-        if (!id && parent.folder_id != VIRTUAL_ROOT) {
-          return this.$router.push({ params: { fid: parent.folder_id } });
+        if (!id && parent.id != VIRTUAL_ROOT) {
+          return this.$router.push({ params: { fid: parent.id } });
         }
         await this.resetPaths();
-
-        // to view data
-        this.folders = parent.folders
-          ? parent.folders.map(v => ({ ...v, type: 'folder' }))
-          : [];
-        this.files = parent.files
-          ? parent.files.map(v => ({ ...v, type: 'file' }))
-          : [];
+        this.folders = parent.folders ? parent.folders : [];
+        this.files = parent.files ? parent.files : [];
       } catch (error) {
         this.$toast.error(error.msg);
+      } finally {
+        this.loading = false;
       }
     },
 
     resetPaths: async function() {
       try {
-        const id = Number(this.$store.state.currentFolder.folder_id);
+        const id = Number(this.$store.state.currentFolder.id);
         if (!id) return;
         const resp = await GetFolderParents(id);
         let parents = resp.data.parents;
@@ -183,21 +223,30 @@ export default {
 
     entryClick: function(item) {
       if (item.type !== 'folder') return;
-      const id = item.folder_id;
-      return this.jumpFolder(id);
+      return this.jumpFolder(item.id);
     },
 
     jumpFolder: function(fid) {
       if (Number(fid) === VIRTUAL_ROOT) {
-        return this.$router.push({ path: '/space' }).catch(() => {});
+        return this.$router.push({ path: '/home/space' });
       } else {
         return this.$router.push({ params: { fid } });
       }
     },
 
-    editItem: function() {},
+    editEntry: function(entry) {
+      this.focusUpdateEntry = entry;
+      this.showUpdateEntry = true;
+    },
 
-    deleteItem: function() {},
+    deleteEntry: function(entry) {
+      this.focusDeleteEntry = entry;
+      this.showDelete = true;
+    },
+
+    createFolder: function() {
+      this.showCreateFolder = true;
+    },
 
     formatDate: function(seconds) {
       return FromUnixSeconds(seconds).format('YYYY-MM-DD HH:mm:ss');
@@ -217,6 +266,11 @@ export default {
     breadcrumbsClass: function(item) {
       if (item.disabled) return '';
       return 'pointer-curson clickable-color';
+    },
+
+    breadcrumbsClick: function(item) {
+      if (item.disabled) return;
+      return this.jumpFolder(item.id);
     },
   },
 };

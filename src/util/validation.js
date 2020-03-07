@@ -6,6 +6,7 @@ const errorMsg = {
   maxLength: (field, param) => `${field} length should less than ${param}`,
   minLength: (field, param) => `${field} length should more than ${param}`,
   sameAs: (field, param) => `${field} should be same as ${param}`,
+  noSlash: field => `${field} cannot contain / or \\`,
 };
 
 const paramsMap = {
@@ -61,5 +62,10 @@ export const Validations = {
 
   confirmPassword: {
     sameAs: sameAs('password'),
+  },
+
+  entryName: {
+    maxLength: maxLength(100),
+    noSlash: value => value.indexOf('/') === -1 && value.indexOf('\\') === -1,
   },
 };

@@ -20,4 +20,8 @@ export default {
   setCurrentFolder: function(state, folder_info) {
     state.currentFolder = folder_info;
   },
+
+  switchUploadDialog: function(state) {
+    state.uploadDialog = !state.uploadDialog;
+  },
 };

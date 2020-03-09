@@ -71,6 +71,7 @@ import { required } from 'vuelidate/lib/validators';
 import { Register } from '@/api/v1/auth';
 
 import { Validations, MapErrors } from '@/util/validation';
+import { ToastError, ToastSuccess } from '@/util/toast';
 
 const validations = {
   email: {
@@ -123,10 +124,10 @@ export default {
       }
       try {
         await Register(this.$data);
-        this.$toast.success('Success');
+        ToastSuccess('Success');
         this.$router.push('login');
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 

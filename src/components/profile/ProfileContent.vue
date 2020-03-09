@@ -97,6 +97,7 @@ import { GetUserInfo, UpdateUserInfo, UploadUserAvatar } from '@/api/v1/user';
 import { RoleMap } from '@/util/const';
 import { FromUnixSeconds } from '@/util/day';
 import { Validations, MapErrors } from '@/util/validation';
+import { ToastError, ToastSuccess } from '@/util/toast';
 
 const validations = {
   username: {
@@ -154,7 +155,7 @@ export default {
     fetchData: async function() {
       try {
         const resp = await GetUserInfo();
-        const data = resp.data.user;
+        const data = resp.data.result;
         this.email = data.email;
         this.username = data.username;
         this.role = data.role;
@@ -164,7 +165,7 @@ export default {
         }
         this.userInfo = data;
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 
@@ -177,10 +178,10 @@ export default {
           username: this.username,
           password: this.password,
         });
-        this.$toast.success('Success');
+        ToastSuccess('Success');
         await this.fetchData();
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
     reset: function() {
@@ -202,9 +203,9 @@ export default {
         }
         await UploadUserAvatar(file);
         this.$store.commit('updateAvatar');
-        this.$toast.success('Success');
+        ToastSuccess('Success');
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
       return;
     },

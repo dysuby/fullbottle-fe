@@ -37,6 +37,7 @@ import { required } from 'vuelidate/lib/validators';
 
 import { UpdateFolder, UpdateFile } from '@/api/v1/bottle';
 import { Validations, MapErrors } from '@/util/validation';
+import { ToastError, ToastSuccess } from '@/util/toast';
 
 const validations = {
   name: {
@@ -98,14 +99,14 @@ export default {
             folder_id: this.entry.folder_id,
           });
         }
-        this.$toast.success('Success');
+        ToastSuccess('Success');
 
         this.$emit('refresh');
         this.dialog = false;
         this.reset();
       } catch (error) {
         console.log(error);
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 

@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 
 import store from '@/store';
 import { Now, FromUnixSeconds } from '@/util/day';
+import { ToastError, ToastSuccess } from '@/util/toast';
 
 const AppAccess = () => import('@/views/AppAccess.vue');
 const HomeView = () => import('@/views/HomeView.vue');
@@ -72,6 +73,7 @@ router.beforeEach((to, from, next) => {
         localStorage.clear();
         store.commit('logout');
       }
+      ToastError('Please login to continue');
       return next({
         path: '/login',
         query: { redirect: to.fullPath },
@@ -81,6 +83,7 @@ router.beforeEach((to, from, next) => {
     to.matched.some(record => record.meta.requiresNoLogin) &&
     !needLogin()
   ) {
+    ToastSuccess('Already login, redirecting...');
     return next({
       path: '/home',
     });

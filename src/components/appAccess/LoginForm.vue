@@ -50,6 +50,7 @@ import { required } from 'vuelidate/lib/validators';
 import { Login } from '@/api/v1/auth';
 
 import { Validations, MapErrors } from '@/util/validation';
+import { ToastError } from '@/util/toast';
 
 const validations = {
   email: {
@@ -85,7 +86,7 @@ export default {
         const resp = await Login(this.$data);
 
         // store auth info
-        localStorage.setItem('auth-info', JSON.stringify(resp.data));
+        localStorage.setItem('auth-info', JSON.stringify(resp.data.result));
         this.$store.commit('updateAuthInfo');
 
         // redirect
@@ -95,7 +96,7 @@ export default {
         }
         this.$router.push('/');
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 

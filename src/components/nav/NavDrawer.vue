@@ -19,7 +19,7 @@
     <v-divider></v-divider>
 
     <v-card flat>
-      <v-card-title class="subtitle-2">剩余容量 {{sizeString(remain)}}/{{sizeString(capacity)}}</v-card-title>
+      <v-card-title class="subtitle-2">{{sizeString(used)}}/{{sizeString(capacity)}} Used</v-card-title>
       <v-card-text>
         <v-progress-linear :value="spaceCapacity" height="7px" rounded></v-progress-linear>
       </v-card-text>
@@ -30,6 +30,7 @@
 <script>
 import { GetSpaceMeta } from '@/api/v1/bottle';
 import { SizeUnitConv } from '@/util/file';
+import { ToastError } from '@/util/toast';
 
 export default {
   props: ['drawer'],
@@ -60,8 +61,12 @@ export default {
       },
     },
 
+    used: function() {
+      return this.capacity - this.remain;
+    },
+
     spaceCapacity: function() {
-      return (this.remain / this.capacity) * 100;
+      return (this.used / this.capacity) * 100;
     },
   },
 
@@ -69,11 +74,11 @@ export default {
     fetchMeta: async function() {
       try {
         const resp = await GetSpaceMeta();
-        const meta = resp.data.meta;
+        const meta = resp.data.result;
         this.capacity = meta.capacity;
         this.remain = meta.remain;
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 

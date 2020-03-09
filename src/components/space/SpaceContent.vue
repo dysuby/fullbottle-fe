@@ -1,20 +1,8 @@
 <template>
   <v-container>
-    <v-data-table
-      v-model="selected"
-      :headers="headers"
-      :items="entries"
-      :loading="loading"
-      loading-text="loading..."
-      item-key="key"
-      show-select
-      disable-pagination
-      disable-sort
-      hide-default-footer
-      fixed-header
-    >
+    <file-list :folders="folders" :files="files" :loading="loading" @folder-click="folderClick">
       <template v-slot:top>
-        <v-btn color="blue-grey" class="mr-4 white--text">
+        <v-btn color="blue-grey" class="mr-4 white--text" @click="uploadClick">
           Upload
           <v-icon right dark>mdi-cloud-upload</v-icon>
         </v-btn>
@@ -23,43 +11,37 @@
           <v-icon right dark>mdi-folder</v-icon>
         </v-btn>
         <v-row align="center">
-          <v-col md="auto" lg="auto" sm="auto">
+          <v-col cols="auto">
             <span class="d-flex align-center">Current path:</span>
           </v-col>
           <v-col>
-            <v-breadcrumbs :items="paths" large class="less-border">
-              <template v-slot:item="{ item }">
-                <span :class="breadcrumbsClass(item)" @click="breadcrumbsClick(item)">{{item.text}}</span>
-              </template>
-            </v-breadcrumbs>
+            <breadcrumbs
+              :paths="paths"
+              large
+              class="less-border"
+              @breadcrumbs-click="breadcrumbsClick"
+            ></breadcrumbs>
           </v-col>
         </v-row>
       </template>
 
-      <template v-slot:item.icon="{ item }">
-        <v-icon>{{ getIcon(item.type) }}</v-icon>
-      </template>
-
-      <template v-slot:item.name="{ item }">
-        <span class="clickable-hover-color pointer-curson" @click="entryClick(item)">{{item.name}}</span>
-      </template>
-
-      <template v-slot:item.update_time="{ item }">{{ formatDate(item.update_time) }}</template>
-
-      <template v-slot:item.size="{ item }">{{ formaatSize(item.size) }}</template>
-
-      <template v-slot:item.action="{ item }">
+      <template v-slot:itemAction="{ item }">
+        <v-icon
+          v-if="item.type === 'file'"
+          small
+          class="mr-2"
+          @click="downloadClick(item)"
+        >mdi-download</v-icon>
         <v-icon small class="mr-2" @click="editEntry(item)">mdi-pencil</v-icon>
         <v-icon small @click="deleteEntry(item)">mdi-delete</v-icon>
       </template>
-      <template v-slot:no-data>You have no files here</template>
-    </v-data-table>
+    </file-list>
 
     <delete-dialog v-model="showDelete" :entry="focusDeleteEntry" @refresh="fetchData(true)"></delete-dialog>
 
     <create-folder-dialog
       v-model="showCreateFolder"
-      :parent_id="currentFolderId"
+      :parent_id="currentFolder.id"
       @refresh="fetchData(true)"
     ></create-folder-dialog>
 
@@ -72,14 +54,17 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import {
   GetFilesByFolderId,
   GetFilesByPath,
   GetFolderParents,
-  VIRTUAL_ROOT,
 } from '@/api/v1/bottle';
-import { FromUnixSeconds } from '@/util/day';
-import { SizeUnitConv } from '@/util/file';
+import { DownloadFile } from '@/api/v1/download';
+
+import { VIRTUAL_ROOT } from '@/util/const';
+import { ToastError, ToastSuccess } from '@/util/toast';
 
 const InitPaths = () => [{ id: VIRTUAL_ROOT, text: 'home', disabled: false }];
 
@@ -87,7 +72,6 @@ export default {
   data: function() {
     return {
       loading: true,
-      selected: [],
       paths: InitPaths(),
       headers: [
         {
@@ -117,6 +101,9 @@ export default {
   },
 
   components: {
+    FileList: () => import('@/components/filesView/FileList.vue'),
+    breadcrumbs: () => import('@/components/filesView/Breadcrumbs.vue'),
+
     DeleteDialog: () => import('@/components/space/DeleteDialog.vue'),
     CreateFolderDialog: () =>
       import('@/components/space/CreateFolderDialog.vue'),
@@ -127,31 +114,12 @@ export default {
     await this.fetchData();
   },
 
-  computed: {
-    entries: function() {
-      // to view data
-      const folder = this.folders
-        ? this.folders.map(v => ({
-            ...v,
-            type: 'folder',
-            key: `folder:${v.id}`,
-          }))
-        : [];
-      const files = this.files
-        ? this.files.map(v => ({ ...v, type: 'file', key: `file:${v.id}` }))
-        : [];
-
-      return [...folder, ...files];
-    },
-
-    currentFolderId: function() {
-      return this.paths[this.paths.length - 1].id;
-    },
-  },
+  computed: mapState(['currentFolder', 'uploadDialog']),
 
   watch: {
-    $route: async function() {
-      await this.fetchData();
+    $route: 'fetchData',
+    uploadDialog: function() {
+      if (!this.$store.state.uploadDialog) this.fetchData();
     },
   },
 
@@ -167,10 +135,10 @@ export default {
         if (
           !force &&
           id &&
-          this.$store.state.currentFolder.id &&
-          id === this.$store.state.currentFolder.id
+          this.currentFolder.id &&
+          id === this.currentFolder.id
         ) {
-          parent = this.$store.state.currentFolder;
+          parent = this.currentFolder;
         } else {
           // fetch from server
           let resp = null;
@@ -179,7 +147,7 @@ export default {
           } else {
             resp = await GetFilesByFolderId(id ? id : VIRTUAL_ROOT);
           }
-          parent = resp.data.folder;
+          parent = resp.data.result;
         }
 
         // cache
@@ -188,10 +156,10 @@ export default {
           return this.$router.push({ params: { fid: parent.id } });
         }
         await this.resetPaths();
-        this.folders = parent.folders ? parent.folders : [];
-        this.files = parent.files ? parent.files : [];
+        this.folders = parent.folders || [];
+        this.files = parent.files || [];
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       } finally {
         this.loading = false;
       }
@@ -199,10 +167,10 @@ export default {
 
     resetPaths: async function() {
       try {
-        const id = Number(this.$store.state.currentFolder.id);
+        const id = Number(this.currentFolder.id);
         if (!id) return;
         const resp = await GetFolderParents(id);
-        let parents = resp.data.parents;
+        let parents = resp.data.result;
         if (!parents) {
           parents = [];
         }
@@ -217,12 +185,15 @@ export default {
         paths[paths.length - 1].disabled = true;
         this.paths = paths;
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 
-    entryClick: function(item) {
-      if (item.type !== 'folder') return;
+    folderClick: function(item) {
+      return this.jumpFolder(item.id);
+    },
+
+    breadcrumbsClick: function(item) {
       return this.jumpFolder(item.id);
     },
 
@@ -248,36 +219,20 @@ export default {
       this.showCreateFolder = true;
     },
 
-    formatDate: function(seconds) {
-      return FromUnixSeconds(seconds).format('YYYY-MM-DD HH:mm:ss');
+    uploadClick: function() {
+      this.$store.commit('switchUploadDialog');
     },
 
-    formaatSize: function(size) {
-      if (!size) return '-';
-      const f = SizeUnitConv(size);
-      return `${f.value}${f.unit}`;
-    },
-
-    getIcon: function(type) {
-      if (type === 'folder') return 'mdi-folder';
-      return 'mdi-file';
-    },
-
-    breadcrumbsClass: function(item) {
-      if (item.disabled) return '';
-      return 'pointer-curson clickable-color';
-    },
-
-    breadcrumbsClick: function(item) {
-      if (item.disabled) return;
-      return this.jumpFolder(item.id);
+    downloadClick: function(item) {
+      if (item.type !== 'file') return;
+      DownloadFile(item.id);
     },
   },
 };
 </script>
 
 <style scoped>
-.pointer-curson {
+.pointer-cursor {
   cursor: pointer;
 }
 

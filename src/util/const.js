@@ -8,3 +8,7 @@ export function RoleMap(r) {
       return 'Unknown';
   }
 }
+
+export const DEFAULT_AVATAR = '/default.png';
+
+export const VIRTUAL_ROOT = -1;

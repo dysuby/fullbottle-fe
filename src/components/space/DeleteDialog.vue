@@ -20,6 +20,7 @@
 
 <script>
 import { DeleteFolder, DeleteFile } from '@/api/v1/bottle';
+import { ToastError, ToastSuccess } from '@/util/toast';
 
 export default {
   props: ['value', 'entry'],
@@ -43,12 +44,12 @@ export default {
         } else {
           await DeleteFile(this.entry.id);
         }
-        this.$toast.success('Success');
+        ToastSuccess('Success');
 
         this.$emit('refresh');
         this.dialog = false;
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
 

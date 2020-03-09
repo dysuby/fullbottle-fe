@@ -9,7 +9,7 @@
 export default {
   data: function() {
     return {
-      drawer: true,
+      drawer: false,
     };
   },
   components: {

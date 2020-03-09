@@ -1,7 +1,7 @@
 import axios from 'axios';
 import router from '@/router';
-import app from '@/App.vue';
 import store from '@/store';
+import { ToastError } from '@/util/toast';
 
 const service = axios.create({
   baseURL: '',
@@ -9,11 +9,18 @@ const service = axios.create({
   withCredentials: true,
 });
 
+export function getJwtToken() {
+  const authInfo = store.state.authInfo;
+  if (authInfo) {
+    return `Bearer ${authInfo.token}`;
+  }
+}
+
 service.interceptors.request.use(
   config => {
-    const authInfo = store.state.authInfo;
-    if (authInfo) {
-      config.headers['authorization'] = `Bearer ${authInfo.token}`;
+    const token = getJwtToken();
+    if (token) {
+      config.headers['authorization'] = token;
     }
 
     return config;
@@ -38,11 +45,11 @@ service.interceptors.response.use(
         localStorage.clear();
         store.commit('logout');
 
+        ToastError('Login expire, please login again');
         router.push({
           path: '/login',
           query: { redirect: router.currentRoute.fullPath },
         });
-        app.$toast.error('Login expire, please login again');
         return error;
       }
 

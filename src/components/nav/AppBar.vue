@@ -27,6 +27,8 @@
 import { mapState } from 'vuex';
 
 import { GetUserInfo } from '@/api/v1/user';
+import { DEFAULT_AVATAR } from '@/util/const';
+import { ToastError } from '@/util/toast';
 
 export default {
   computed: mapState(['userAvatar']),
@@ -39,14 +41,17 @@ export default {
     },
 
     fetchProfile: async function() {
+      if (this.userAvatar != DEFAULT_AVATAR) {
+        return;
+      }
       try {
         const resp = await GetUserInfo();
-        const data = resp.data.user;
+        const data = resp.data.result;
         if (data.avatar_fid) {
           this.$store.commit('updateAvatar');
         }
       } catch (error) {
-        this.$toast.error(error.msg);
+        ToastError(error);
       }
     },
   },

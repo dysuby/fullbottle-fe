@@ -1,6 +1,5 @@
 import axios from '@/api/http';
-
-export const VIRTUAL_ROOT = -1;
+import { VIRTUAL_ROOT } from '@/util/const';
 
 export function GetSpaceMeta() {
   return axios({
@@ -65,7 +64,7 @@ export function DeleteFolder(fid) {
   });
 }
 
-export function Deletefile(fid) {
+export function DeleteFile(fid) {
   if (!fid) return Promise.reject({ msg: 'fid undefined' });
 
   return axios({

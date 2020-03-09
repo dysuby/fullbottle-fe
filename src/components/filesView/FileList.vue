@@ -17,7 +17,7 @@
     </template>
 
     <template v-slot:item.icon="{ item }">
-      <v-icon>{{ getIcon(item.type) }}</v-icon>
+      <v-icon>{{ getIcon(item) }}</v-icon>
     </template>
 
     <template v-slot:item.name="{ item }">
@@ -36,6 +36,7 @@
 </template>
 
 <script>
+import { extFileType } from '@/util/const';
 import { FromUnixSeconds } from '@/util/day';
 import { SizeUnitConv } from '@/util/file';
 
@@ -103,9 +104,18 @@ export default {
       return `${f.value}${f.unit}`;
     },
 
-    getIcon: function(type) {
-      if (type === 'folder') return 'mdi-folder';
-      return 'mdi-file';
+    getIcon: function(item) {
+      if (item.type === 'folder') return 'mdi-folder';
+
+      const fileType = extFileType(item.name);
+      const iconMap = {
+        image: 'mdi-image',
+        document: 'mdi-file-document-outline',
+        video: 'mdi-video',
+        audio: 'mdi-music',
+        unknown: 'mdi-file',
+      };
+      return iconMap[fileType] || 'mdi-file';
     },
   },
 };

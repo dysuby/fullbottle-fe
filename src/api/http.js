@@ -9,20 +9,8 @@ const service = axios.create({
   withCredentials: true,
 });
 
-export function getJwtToken() {
-  const authInfo = store.state.authInfo;
-  if (authInfo) {
-    return `Bearer ${authInfo.token}`;
-  }
-}
-
 service.interceptors.request.use(
   config => {
-    const token = getJwtToken();
-    if (token) {
-      config.headers['authorization'] = token;
-    }
-
     return config;
   },
   error => {

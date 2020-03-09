@@ -101,7 +101,7 @@ export default {
         }
         ToastSuccess('Success');
 
-        this.$emit('refresh');
+        this.$store.commit('fileChange');
         this.dialog = false;
         this.reset();
       } catch (error) {

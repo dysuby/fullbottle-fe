@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import { GetSpaceMeta } from '@/api/v1/bottle';
 import { SizeUnitConv } from '@/util/file';
 import { ToastError } from '@/util/toast';
@@ -68,6 +70,12 @@ export default {
     spaceCapacity: function() {
       return (this.used / this.capacity) * 100;
     },
+
+    ...mapState(['fileChange']),
+  },
+
+  watch: {
+    fileChange: 'fetchMeta',
   },
 
   methods: {

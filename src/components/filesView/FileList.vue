@@ -40,11 +40,10 @@ import { FromUnixSeconds } from '@/util/day';
 import { SizeUnitConv } from '@/util/file';
 
 export default {
-  props: ['files', 'folders', 'loading'],
+  props: ['files', 'folders', 'loading', 'value'],
 
   data: function() {
     return {
-      selected: [],
       headers: [
         {
           text: '',
@@ -77,6 +76,15 @@ export default {
         : [];
 
       return [...folder, ...files];
+    },
+
+    selected: {
+      get: function() {
+        return this.value;
+      },
+      set: function(value) {
+        this.$emit('input', value);
+      },
     },
   },
 

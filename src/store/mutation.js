@@ -24,4 +24,8 @@ export default {
   switchUploadDialog: function(state) {
     state.uploadDialog = !state.uploadDialog;
   },
+
+  fileChange: function(state) {
+    state.fileChange += 1;
+  },
 };

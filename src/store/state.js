@@ -11,4 +11,6 @@ export default {
   currentFolder: {},
 
   uploadDialog: false,
+
+  fileChange: 0, // value means nothing
 };

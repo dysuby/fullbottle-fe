@@ -1,6 +1,12 @@
 <template>
   <v-container>
-    <file-list :folders="folders" :files="files" :loading="loading" @folder-click="folderClick">
+    <file-list
+      v-model="selected"
+      :folders="folders"
+      :files="files"
+      :loading="loading"
+      @folder-click="folderClick"
+    >
       <template v-slot:top>
         <v-btn color="blue-grey" class="mr-4 white--text" @click="uploadClick">
           Upload
@@ -9,6 +15,16 @@
         <v-btn color="info" class="mr-4 white--text" @click="createFolder">
           New Folder
           <v-icon right dark>mdi-folder</v-icon>
+        </v-btn>
+
+        <v-btn
+          v-show="selected.length > 0"
+          color="error"
+          class="mr-4 white--text"
+          @click="batchDeleteEntries"
+        >
+          Delete
+          <v-icon right dark>mdi-delete</v-icon>
         </v-btn>
         <v-row align="center">
           <v-col cols="auto">
@@ -37,19 +53,11 @@
       </template>
     </file-list>
 
-    <delete-dialog v-model="showDelete" :entry="focusDeleteEntry" @refresh="fetchData(true)"></delete-dialog>
+    <delete-dialog v-model="showDelete" :entries="focusDeleteEntries"></delete-dialog>
 
-    <create-folder-dialog
-      v-model="showCreateFolder"
-      :parent_id="currentFolder.id"
-      @refresh="fetchData(true)"
-    ></create-folder-dialog>
+    <create-folder-dialog v-model="showCreateFolder" :parent_id="currentFolder.id"></create-folder-dialog>
 
-    <update-entry-dialog
-      v-model="showUpdateEntry"
-      :entry="focusUpdateEntry"
-      @refresh="fetchData(true)"
-    ></update-entry-dialog>
+    <update-entry-dialog v-model="showUpdateEntry" :entry="focusUpdateEntry"></update-entry-dialog>
   </v-container>
 </template>
 
@@ -73,6 +81,9 @@ export default {
     return {
       loading: true,
       paths: InitPaths(),
+
+      selected: [],
+
       headers: [
         {
           text: '',
@@ -91,12 +102,12 @@ export default {
       files: [],
 
       showDelete: false,
-      focusDeleteEntry: { type: 'folder' },
+      focusDeleteEntries: [],
 
       showCreateFolder: false,
 
       showUpdateEntry: false,
-      focusUpdateEntry: { type: 'folder' },
+      focusUpdateEntry: {},
     };
   },
 
@@ -114,16 +125,25 @@ export default {
     await this.fetchData();
   },
 
-  computed: mapState(['currentFolder', 'uploadDialog']),
+  computed: {
+    ...mapState(['currentFolder', 'fileChange']),
+  },
 
   watch: {
-    $route: 'fetchData',
-    uploadDialog: function() {
-      if (!this.$store.state.uploadDialog) this.fetchData();
+    $route: 'refresh',
+    fileChange: function() {
+      this.refresh();
     },
   },
 
   methods: {
+    refresh: async function() {
+      await this.fetchData(true);
+      this.selected = [];
+      this.focusDeleteEntries = [];
+      this.focusUpdateEntry = {};
+    },
+
     fetchData: async function(force = false) {
       this.loading = true;
       const path = this.$route.query.path;
@@ -201,7 +221,7 @@ export default {
       if (Number(fid) === VIRTUAL_ROOT) {
         return this.$router.push({ path: '/home/space' });
       } else {
-        return this.$router.push({ params: { fid } });
+        return this.$router.push({ path: `/home/space/${fid}` });
       }
     },
 
@@ -211,7 +231,12 @@ export default {
     },
 
     deleteEntry: function(entry) {
-      this.focusDeleteEntry = entry;
+      this.focusDeleteEntries = [entry];
+      this.showDelete = true;
+    },
+
+    batchDeleteEntries: function() {
+      this.focusDeleteEntries = this.selected;
       this.showDelete = true;
     },
 

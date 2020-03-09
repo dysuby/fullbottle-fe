@@ -30,7 +30,7 @@
             <uploader-files>
               <template v-slot:default="{ files }">
                 <uploader-file
-                  v-for="file in files"
+                  v-for="file of files"
                   :file="file"
                   :key="file.id"
                   :ref="`file${file.id}`"
@@ -53,8 +53,11 @@
                         <span
                           v-show="attrs.status !== 'uploading'"
                           class="text-capitalize"
-                        >{{attrs.status}}</span>
-                        <span v-show="attrs.status === 'uploading'">{{ attrs.formatedAverageSpeed }}</span>
+                        >{{file.customStatus || attrs.status}}</span>
+                        <span v-show="attrs.status === 'uploading'">
+                          <v-progress-circular size="20" :value="attrs.progress*100" color="info"></v-progress-circular>
+                          {{ attrs.formatedAverageSpeed }}
+                        </span>
                       </v-col>
 
                       <v-col>
@@ -90,7 +93,7 @@
                           <v-icon>mdi-pause</v-icon>
                         </v-btn>
 
-                        <v-btn icon small @click="fileAction(file.id, 'remove')">
+                        <v-btn icon small @click="fileRemove(file)">
                           <v-icon>mdi-close</v-icon>
                         </v-btn>
                       </v-col>
@@ -110,7 +113,6 @@
 import { mapState } from 'vuex';
 import SparkMD5 from 'spark-md5';
 
-import { getJwtToken } from '@/api/http';
 import {
   UPLOAD_URL,
   GetUploadToken,
@@ -132,10 +134,6 @@ export default {
 
         chunkSize: 1 << 20,
         forceChunkSize: true, // make every chunk size equal or less than chunkSize
-
-        headers: function() {
-          return { authorization: getJwtToken() };
-        },
 
         generateUniqueIdentifier: function(file) {
           return file.hash;
@@ -184,6 +182,7 @@ export default {
     fileAdded: async function(file) {
       // post token
       file.pause();
+      file.customStatus = 'preparing';
       try {
         // calculate each chunk md5
         const chunkHash = await CalculateFileChunkMd5(file.file);
@@ -192,10 +191,11 @@ export default {
 
         await this.preprocess(file);
 
+        delete file.customStatus;
         file.resume();
       } catch (error) {
         ToastError(error);
-        this.fileAction(file.id, 'cancel');
+        this.fileAction(file.id, 'remove');
       }
     },
 
@@ -221,6 +221,7 @@ export default {
 
     fileSuccess: function(rootFile, file, message, chunk) {
       ToastSuccess(`Upload ${file.name} successfully`);
+      this.$store.commit('fileChange');
     },
 
     fileError: function(rootFile, file, message, chunk) {
@@ -228,9 +229,11 @@ export default {
     },
 
     fileRemove: async function(file) {
-      if (!file.token) return;
+      this.fileAction(file.id, 'remove');
+
+      if (!file.uploadToken) return;
       try {
-        await CancelUpload(file.token);
+        await CancelUpload(file.uploadToken);
       } catch (error) {
         console.log(error);
       }

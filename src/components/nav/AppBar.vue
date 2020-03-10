@@ -45,9 +45,9 @@ export default {
         return;
       }
       try {
-        const resp = await GetUserInfo();
-        const data = resp.data.result;
-        if (data.avatar_fid) {
+        const data = await GetUserInfo();
+        const result = data.result;
+        if (result.avatar_fid) {
           this.$store.commit('updateAvatar');
         }
       } catch (error) {

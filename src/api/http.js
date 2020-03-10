@@ -20,7 +20,7 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
   response => {
-    return response;
+    return response.data;
   },
   error => {
     if (axios.isCancel(error)) {
@@ -28,8 +28,10 @@ service.interceptors.response.use(
     }
 
     if (error.response) {
+      const resp = error.response;
+
       // token invalid
-      if (error.response.status === 401) {
+      if (resp.status === 401) {
         localStorage.clear();
         store.commit('logout');
 
@@ -38,10 +40,31 @@ service.interceptors.response.use(
           path: '/login',
           query: { redirect: router.currentRoute.fullPath },
         });
-        return error;
+        return Promise.reject(error);
       }
 
-      return Promise.reject(error.response.data);
+      if (
+        error.request.responseType === 'blob' &&
+        resp.data instanceof Blob &&
+        resp.data.type &&
+        resp.data.type.toLowerCase().indexOf('json') != -1
+      ) {
+        return new Promise((resolve, reject) => {
+          let reader = new FileReader();
+          reader.onload = () => {
+            resp.data = JSON.parse(reader.result);
+            resolve(Promise.reject(resp.data));
+          };
+
+          reader.onerror = () => {
+            reject(error);
+          };
+
+          reader.readAsText(resp.data);
+        });
+      }
+
+      return Promise.reject(resp.data);
     }
     return Promise.reject({ msg: error });
   }

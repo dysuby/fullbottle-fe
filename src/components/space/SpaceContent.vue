@@ -6,6 +6,7 @@
       :files="files"
       :loading="loading"
       @folder-click="folderClick"
+      @file-click="fileClick"
     >
       <template v-slot:top>
         <v-btn color="blue-grey" class="mr-4 white--text" @click="uploadClick">
@@ -58,6 +59,8 @@
     <create-folder-dialog v-model="showCreateFolder" :parent_id="currentFolder.id"></create-folder-dialog>
 
     <update-entry-dialog v-model="showUpdateEntry" :entry="focusUpdateEntry"></update-entry-dialog>
+
+    <preview-dialog :entry="focusPreviewEntry"></preview-dialog>
   </v-container>
 </template>
 
@@ -108,6 +111,9 @@ export default {
 
       showUpdateEntry: false,
       focusUpdateEntry: {},
+
+      showPreview: false,
+      focusPreviewEntry: {},
     };
   },
 
@@ -119,6 +125,7 @@ export default {
     CreateFolderDialog: () =>
       import('@/components/space/CreateFolderDialog.vue'),
     UpdateEntryDialog: () => import('@/components/space/UpdateEntryDialog.vue'),
+    PreviewDialog: () => import('@/components/space/PreviewDialog.vue'),
   },
 
   created: async function() {
@@ -161,13 +168,13 @@ export default {
           parent = this.currentFolder;
         } else {
           // fetch from server
-          let resp = null;
+          let data = null;
           if (!id && path) {
-            resp = await GetFilesByPath(path);
+            data = await GetFilesByPath(path);
           } else {
-            resp = await GetFilesByFolderId(id ? id : VIRTUAL_ROOT);
+            data = await GetFilesByFolderId(id ? id : VIRTUAL_ROOT);
           }
-          parent = resp.data.result;
+          parent = data.result;
         }
 
         // cache
@@ -189,8 +196,8 @@ export default {
       try {
         const id = Number(this.currentFolder.id);
         if (!id) return;
-        const resp = await GetFolderParents(id);
-        let parents = resp.data.result;
+        const data = await GetFolderParents(id);
+        let parents = data.result;
         if (!parents) {
           parents = [];
         }
@@ -211,6 +218,11 @@ export default {
 
     folderClick: function(item) {
       return this.jumpFolder(item.id);
+    },
+
+    fileClick: function(item) {
+      // pre check in dialog component, so there is no need to show dialog first
+      this.focusPreviewEntry = item;
     },
 
     breadcrumbsClick: function(item) {

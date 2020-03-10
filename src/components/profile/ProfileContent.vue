@@ -154,16 +154,18 @@ export default {
   methods: {
     fetchData: async function() {
       try {
-        const resp = await GetUserInfo();
-        const data = resp.data.result;
-        this.email = data.email;
-        this.username = data.username;
-        this.role = data.role;
-        this.joinDate = FromUnixSeconds(data.create_time).format('YYYY-MM-DD');
-        if (data.avatar_fid) {
+        const data = await GetUserInfo();
+        const result = data.result;
+        this.email = result.email;
+        this.username = result.username;
+        this.role = result.role;
+        this.joinDate = FromUnixSeconds(result.create_time).format(
+          'YYYY-MM-DD'
+        );
+        if (result.avatar_fid) {
           this.$store.commit('updateAvatar');
         }
-        this.userInfo = data;
+        this.userInfo = result;
       } catch (error) {
         ToastError(error);
       }

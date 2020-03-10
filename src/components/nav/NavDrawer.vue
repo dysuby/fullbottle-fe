@@ -81,8 +81,8 @@ export default {
   methods: {
     fetchMeta: async function() {
       try {
-        const resp = await GetSpaceMeta();
-        const meta = resp.data.result;
+        const data = await GetSpaceMeta();
+        const meta = data.result;
         this.capacity = meta.capacity;
         this.remain = meta.remain;
       } catch (error) {

@@ -3,9 +3,11 @@
     <v-dialog v-model="dialog" min-width="700px" max-width="1000px">
       <v-card>
         <uploader
+          ref="uploader"
           :options="options"
           :autoStart="false"
           @file-added="fileAdded"
+          @file-removed="fileRemove"
           @file-success="fileSuccess"
           @file-error="fileError"
         >
@@ -26,7 +28,10 @@
             </v-card-actions>
             <uploader-unsupport />
           </uploader-drop>
+
           <v-card-text>
+            <v-btn small color="#FF5252" dark @click="clearAllFiles()">Remove all files</v-btn>
+
             <uploader-files>
               <template v-slot:default="{ files }">
                 <uploader-file
@@ -93,7 +98,7 @@
                           <v-icon>mdi-pause</v-icon>
                         </v-btn>
 
-                        <v-btn icon small @click="fileRemove(file)">
+                        <v-btn icon small @click="file.cancel()">
                           <v-icon>mdi-close</v-icon>
                         </v-btn>
                       </v-col>
@@ -120,7 +125,7 @@ import {
   CancelUpload,
 } from '@/api/v1/upload';
 import { CHUNK_SIZE, CalculateFileChunkMd5 } from '@/util/file';
-import { ToastError, ToastSuccess } from '@/util/toast';
+import { ToastError, ToastSuccess, ToastInfo } from '@/util/toast';
 
 const chunkNum2Offset = function(num) {
   return num * CHUNK_SIZE;
@@ -171,6 +176,9 @@ export default {
         return this.$store.state.uploadDialog;
       },
       set: function() {
+        if (this.$refs.uploader.uploader.isUploading()) {
+          ToastInfo('Uploading will continue in background');
+        }
         this.$store.commit('switchUploadDialog');
       },
     },
@@ -195,7 +203,8 @@ export default {
         file.resume();
       } catch (error) {
         ToastError(error);
-        this.fileAction(file.id, 'remove');
+        file.customStatus = 'failed';
+        file.ignored = true;
       }
     },
 
@@ -216,27 +225,32 @@ export default {
           offset: 0,
           chunk_hash: file.chunkHash[0],
         });
+        file.done = true;
       }
     },
 
     fileSuccess: function(rootFile, file, message, chunk) {
       ToastSuccess(`Upload ${file.name} successfully`);
+      file.done = true;
       this.$store.commit('fileChange');
     },
 
     fileError: function(rootFile, file, message, chunk) {
+      file.done = true;
       ToastError(`Upload ${file.name} failed`);
     },
 
     fileRemove: async function(file) {
-      this.fileAction(file.id, 'remove');
-
-      if (!file.uploadToken) return;
+      if (!file.uploadToken || file.done) return;
       try {
         await CancelUpload(file.uploadToken);
       } catch (error) {
         console.log(error);
       }
+    },
+
+    clearAllFiles: async function() {
+      this.$refs.uploader.uploader.cancel();
     },
 
     uploadClick: function() {

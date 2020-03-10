@@ -83,10 +83,10 @@ export default {
         return;
       }
       try {
-        const resp = await Login(this.$data);
+        const data = await Login(this.$data);
 
         // store auth info
-        localStorage.setItem('auth-info', JSON.stringify(resp.data.result));
+        localStorage.setItem('auth-info', JSON.stringify(data.result));
         this.$store.commit('updateAuthInfo');
 
         // redirect

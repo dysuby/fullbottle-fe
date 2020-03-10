@@ -7,3 +7,7 @@ export function ToastError(error) {
 export function ToastSuccess(msg) {
   Vue.prototype.$toast.success(msg);
 }
+
+export function ToastInfo(msg) {
+  Vue.prototype.$toast.info(msg);
+}

@@ -9,6 +9,8 @@ const AppAccess = () => import('@/views/AppAccess.vue');
 const HomeView = () => import('@/views/HomeView.vue');
 const SpaceView = () => import('@/views/SpaceView.vue');
 const UserProfile = () => import('@/views/UserProfile.vue');
+const ShareAccess = () => import('@/views/ShareAccess.vue');
+const ShareView = () => import('@/views/ShareView.vue');
 
 Vue.use(VueRouter);
 
@@ -54,6 +56,18 @@ const routes = [
     props: { action: 'register' },
     meta: { requiresAuth: false, requiresNoLogin: true },
   },
+  {
+    name: 'shareAccess',
+    path: '/share/:token',
+    component: ShareAccess,
+    meta: { requiresAuth: true, requiresNoLogin: false },
+  },
+  {
+    name: 'shareView',
+    path: '/share/:token/view/:path?',
+    component: ShareView,
+    meta: { requiresAuth: true, requiresNoLogin: false },
+  },
 ];
 
 const router = new VueRouter({
@@ -85,7 +99,7 @@ router.beforeEach((to, from, next) => {
   ) {
     ToastSuccess('Already login, redirecting...');
     return next({
-      path: '/home',
+      path: to.query.redirect || '/home',
     });
   }
   next();

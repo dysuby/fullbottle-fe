@@ -11,7 +11,7 @@
               accept="image/*"
               @change="onAvatarPicked"
             />
-            <v-img :src="userAvatar" alt="Avatar"></v-img>
+            <v-img :src="avatar" alt="Avatar" class="align-center"></v-img>
           </v-avatar>
         </v-card-title>
         <!-- <div class="text-center grey--text">Avatar size cannot exceed 1MB</div> -->
@@ -54,20 +54,24 @@
             label="password"
             name="password"
             prepend-icon="lock"
-            type="password"
+            :type="showPwd ? 'text' : 'password'"
+            :append-icon="showPwd ? 'mdi-eye' : 'mdi-eye-off'"
             :error-messages="passwordErrors"
             @input="$v.password.$touch()"
             @blur="$v.password.$touch()"
+            @click:append="showPwd = !showPwd"
           ></v-text-field>
           <v-text-field
             v-model="confirmPassword"
             label="confirm password"
             name="confirmPassword"
             prepend-icon="mdi-lock-outline"
-            type="password"
+            :type="showCPwd ? 'text' : 'password'"
+            :append-icon="showCPwd ? 'mdi-eye' : 'mdi-eye-off'"
             :error-messages="confirmPasswordErrors"
             @input="$v.confirmPassword.$touch()"
             @blur="$v.confirmPassword.$touch()"
+            @click:append="showCPwd = !showCPwd"
           ></v-text-field>
           <v-text-field
             disabled
@@ -93,11 +97,16 @@
 <script>
 import { mapState } from 'vuex';
 
-import { GetUserInfo, UpdateUserInfo, UploadUserAvatar } from '@/api/v1/user';
-import { RoleMap } from '@/util/const';
+import {
+  GetUserInfo,
+  UpdateUserInfo,
+  UploadUserAvatar,
+  GetUserAvartar,
+} from '@/api/v1/user';
+import { RoleMap, DEFAULT_AVATAR } from '@/util/const';
 import { FromUnixSeconds } from '@/util/day';
 import { Validations, MapErrors } from '@/util/validation';
-import { ToastError, ToastSuccess } from '@/util/toast';
+import { ToastError, ToastSuccess, ToastInfo } from '@/util/toast';
 
 const validations = {
   username: {
@@ -121,11 +130,15 @@ export default {
       confirmPassword: '',
       joinDate: '',
       userInfo: {},
+      avatar: DEFAULT_AVATAR,
+
+      showPwd: false,
+      showCPwd: false,
     };
   },
 
   created: async function() {
-    await this.fetchData();
+    Promise.all([this.fetchData(), this.fetchAvatar()]);
   },
 
   validations,
@@ -143,12 +156,6 @@ export default {
     roleName: function() {
       return RoleMap(this.role);
     },
-
-    ...mapState(['userAvatar']),
-  },
-
-  watch: {
-    $route: 'fetchData',
   },
 
   methods: {
@@ -162,19 +169,27 @@ export default {
         this.joinDate = FromUnixSeconds(result.create_time).format(
           'YYYY-MM-DD'
         );
-        if (result.avatar_fid) {
-          this.$store.commit('updateAvatar');
-        }
         this.userInfo = result;
       } catch (error) {
         ToastError(error);
       }
     },
 
+    fetchAvatar: async function() {
+      try {
+        const avatar = await GetUserAvartar(this.$store.getters.uid);
+        this.avatar = avatar;
+      } catch (error) {
+        ToastError(error);
+      }
+    },
+
     save: async function() {
-      if (this.$v.$touch() && this.$v.$invalid) {
+      this.$v.$touch();
+      if (this.$v.$invalid) {
         return;
       }
+
       try {
         await UpdateUserInfo({
           username: this.username,
@@ -203,8 +218,13 @@ export default {
         if (file.size > 1 << 20) {
           throw { msg: 'Avatar size cannot exceed 1MB' };
         }
+        ToastInfo('Uploading...');
+
         await UploadUserAvatar(file);
-        this.$store.commit('updateAvatar');
+        await this.fetchAvatar();
+
+        this.$store.commit('refreshAvatar', this.avatar);
+
         ToastSuccess('Success');
       } catch (error) {
         ToastError(error);

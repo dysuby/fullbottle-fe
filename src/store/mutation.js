@@ -1,20 +1,22 @@
-import { GetUserAvatarSrc } from '@/api/v1/user';
+import { DEFAULT_AVATAR } from '@/util/const';
 
 export default {
-  updateAuthInfo: function(state) {
-    const ls = localStorage.getItem('auth-info');
-    state.authInfo = JSON.parse(ls);
+  updateAuthInfo: function(state, authInfo) {
+    localStorage.setItem('auth-info', JSON.stringify(authInfo));
+    state.authInfo = authInfo;
   },
 
   logout: function(state) {
     state.authInfo = null;
     state.currentFolder = {};
-    state.userAvatar = '/default.png';
+    state.userAvatar = DEFAULT_AVATAR;
+    state.shareAT = {};
+
+    localStorage.clear();
   },
 
-  updateAvatar: function(state) {
-    state.userAvatar =
-      GetUserAvatarSrc(state.authInfo.uid) + `&r=${Math.random()}`;
+  refreshAvatar: function(state, url) {
+    state.userAvatar = url;
   },
 
   setCurrentFolder: function(state, folder_info) {
@@ -26,6 +28,16 @@ export default {
   },
 
   fileChange: function(state) {
-    state.fileChange += 1;
+    ++state.fileChange;
+  },
+
+  storeShareAT: function(state, payload) {
+    localStorage.setItem(payload.token, JSON.stringify(payload.at));
+    state.shareAT[payload.token] = payload.at;
+  },
+
+  removeShareAT: function(state, token) {
+    localStorage.removeItem(token);
+    delete state.shareAT[token];
   },
 };

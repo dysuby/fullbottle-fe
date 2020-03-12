@@ -1,13 +1,27 @@
 import axios from '@/api/http';
 
+import { DEFAULT_AVATAR } from '@/util/const';
+
 export function GetUserInfo() {
   return axios({
     url: '/v1/users/profile',
   });
 }
 
-export function GetUserAvatarSrc(uid) {
-  return `/v1/users/avatar?uid=${uid}`;
+export function GetUserPublic(uid) {
+  return axios({
+    url: `/v1/users/public?uid=${uid}`,
+  });
+}
+
+export function GetUserAvartar(uid) {
+  return axios({
+    url: `/v1/users/avatar?uid=${uid}`,
+    responseType: 'blob',
+  }).then(data => {
+    if (!data) return DEFAULT_AVATAR;
+    return URL.createObjectURL(data);
+  });
 }
 
 export function UpdateUserInfo({ username, password }) {

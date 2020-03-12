@@ -16,6 +16,7 @@
           required
           @input="$v.email.$touch()"
           @blur="$v.email.$touch()"
+          @keyup.enter="registerClick"
         ></v-text-field>
         <v-text-field
           v-model="username"
@@ -27,28 +28,35 @@
           required
           @input="$v.username.$touch()"
           @blur="$v.username.$touch()"
+          @keyup.enter="registerClick"
         ></v-text-field>
         <v-text-field
           v-model="password"
           label="password"
           name="password"
           prepend-icon="lock"
-          type="password"
+          :type="showPwd ? 'text' : 'password'"
           :error-messages="passwordErrors"
+          :append-icon="showPwd ? 'mdi-eye' : 'mdi-eye-off'"
           required
           @input="$v.password.$touch()"
           @blur="$v.password.$touch()"
+          @click:append="showPwd = !showPwd"
+          @keyup.enter="registerClick"
         ></v-text-field>
         <v-text-field
           v-model="confirmPassword"
           label="confirm password"
           name="confirmPassword"
           prepend-icon="mdi-lock-outline"
-          type="password"
+          :type="showCPwd ? 'text' : 'password'"
           :error-messages="confirmPasswordErrors"
+          :append-icon="showCPwd ? 'mdi-eye' : 'mdi-eye-off'"
           required
           @input="$v.confirmPassword.$touch()"
           @blur="$v.confirmPassword.$touch()"
+          @click:append="showCPwd = !showCPwd"
+          @keyup.enter="registerClick"
         ></v-text-field>
       </v-form>
     </v-card-text>
@@ -56,7 +64,7 @@
     <v-card-actions>
       <v-spacer />
 
-      <v-btn color="primary" @click="loginClick" text>
+      <v-btn color="primary" text @click="loginClick">
         <v-icon left>mdi-arrow-left</v-icon>Login
       </v-btn>
 
@@ -99,6 +107,8 @@ export default {
       username: '',
       password: '',
       confirmPassword: '',
+      showPwd: true,
+      showCPwd: false,
     };
   },
 
@@ -119,9 +129,11 @@ export default {
 
   methods: {
     registerClick: async function() {
-      if (this.$v.$touch() && this.$v.$invalid) {
+      this.$v.$touch();
+      if (this.$v.$invalid) {
         return;
       }
+
       try {
         await Register(this.$data);
         ToastSuccess('Success');

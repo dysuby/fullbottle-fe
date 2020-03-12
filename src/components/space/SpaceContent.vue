@@ -2,6 +2,7 @@
   <v-container>
     <file-list
       v-model="selected"
+      :canSelect="true"
       :folders="folders"
       :files="files"
       :loading="loading"
@@ -9,6 +10,11 @@
       @file-click="fileClick"
     >
       <template v-slot:top>
+        <v-row>
+          <v-col cols="auto">
+            <div class="headline">Space</div>
+          </v-col>
+        </v-row>
         <v-btn color="blue-grey" class="mr-4 white--text" @click="uploadClick">
           Upload
           <v-icon right dark>mdi-cloud-upload</v-icon>
@@ -18,6 +24,15 @@
           <v-icon right dark>mdi-folder</v-icon>
         </v-btn>
 
+        <v-btn
+          v-show="selected.length > 0"
+          color="warning"
+          class="mr-4 white--text"
+          @click="shareClick"
+        >
+          Share
+          <v-icon right dark>mdi-share</v-icon>
+        </v-btn>
         <v-btn
           v-show="selected.length > 0"
           color="error"
@@ -32,12 +47,7 @@
             <span class="d-flex align-center">Current path:</span>
           </v-col>
           <v-col>
-            <breadcrumbs
-              :paths="paths"
-              large
-              class="less-border"
-              @breadcrumbs-click="breadcrumbsClick"
-            ></breadcrumbs>
+            <breadcrumbs :paths="paths" @breadcrumbs-click="breadcrumbsClick"></breadcrumbs>
           </v-col>
         </v-row>
       </template>
@@ -61,10 +71,13 @@
     <update-entry-dialog v-model="showUpdateEntry" :entry="focusUpdateEntry"></update-entry-dialog>
 
     <preview-dialog :entry="focusPreviewEntry"></preview-dialog>
+
+    <share-dialog v-model="showShare" :entries="selected"></share-dialog>
   </v-container>
 </template>
 
 <script>
+import { normalize } from 'path';
 import { mapState } from 'vuex';
 
 import {
@@ -114,6 +127,8 @@ export default {
 
       showPreview: false,
       focusPreviewEntry: {},
+
+      showShare: false,
     };
   },
 
@@ -125,7 +140,8 @@ export default {
     CreateFolderDialog: () =>
       import('@/components/space/CreateFolderDialog.vue'),
     UpdateEntryDialog: () => import('@/components/space/UpdateEntryDialog.vue'),
-    PreviewDialog: () => import('@/components/space/PreviewDialog.vue'),
+    PreviewDialog: () => import('@/components/filesView/PreviewDialog.vue'),
+    ShareDialog: () => import('@/components/space/ShareDialog.vue'),
   },
 
   created: async function() {
@@ -153,7 +169,9 @@ export default {
 
     fetchData: async function(force = false) {
       this.loading = true;
-      const path = this.$route.query.path;
+      const path = this.$route.query.path
+        ? normalize(this.$route.query.path)
+        : '';
 
       try {
         const id = Number(this.$route.params.fid);
@@ -216,17 +234,17 @@ export default {
       }
     },
 
-    folderClick: function(item) {
-      return this.jumpFolder(item.id);
+    folderClick: function(entry) {
+      return this.jumpFolder(entry.id);
     },
 
-    fileClick: function(item) {
+    fileClick: function(entry) {
       // pre check in dialog component, so there is no need to show dialog first
-      this.focusPreviewEntry = item;
+      this.focusPreviewEntry = entry;
     },
 
-    breadcrumbsClick: function(item) {
-      return this.jumpFolder(item.id);
+    breadcrumbsClick: function(entry) {
+      return this.jumpFolder(entry.id);
     },
 
     jumpFolder: function(fid) {
@@ -245,6 +263,10 @@ export default {
     deleteEntry: function(entry) {
       this.focusDeleteEntries = [entry];
       this.showDelete = true;
+    },
+
+    shareClick: function() {
+      this.showShare = true;
     },
 
     batchDeleteEntries: function() {
@@ -267,22 +289,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.pointer-cursor {
-  cursor: pointer;
-}
-
-.clickable-color {
-  color: #01579b;
-}
-
-.clickable-hover-color:hover {
-  color: #03a9f4;
-}
-
-.less-border {
-  padding: 10px !important;
-  margin: 0px !important;
-}
-</style>

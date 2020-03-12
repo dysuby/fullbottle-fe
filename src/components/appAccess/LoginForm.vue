@@ -16,17 +16,21 @@
           required
           @input="$v.email.$touch()"
           @blur="$v.email.$touch()"
+          @keyup.enter="loginClick"
         ></v-text-field>
         <v-text-field
           v-model="password"
           label="password"
           name="password"
           prepend-icon="lock"
-          type="password"
+          :type="showPwd ? 'text' : 'password'"
+          :append-icon="showPwd ? 'mdi-eye' : 'mdi-eye-off'"
           :error-messages="passwordErrors"
           required
           @input="$v.password.$touch()"
           @blur="$v.password.$touch()"
+          @click:append="showPwd = !showPwd"
+          @keyup.enter="loginClick"
         ></v-text-field>
       </v-form>
     </v-card-text>
@@ -67,6 +71,7 @@ export default {
   data: () => ({
     email: '',
     password: '',
+    showPwd: false,
   }),
 
   validations,
@@ -79,15 +84,16 @@ export default {
 
   methods: {
     loginClick: async function() {
-      if (this.$v.$touch() && this.$v.$invalid) {
+      this.$v.$touch();
+      if (this.$v.$invalid) {
         return;
       }
+
       try {
         const data = await Login(this.$data);
 
         // store auth info
-        localStorage.setItem('auth-info', JSON.stringify(data.result));
-        this.$store.commit('updateAuthInfo');
+        this.$store.commit('updateAuthInfo', data.result);
 
         // redirect
         if ('redirect' in this.$route.query) {

@@ -32,4 +32,9 @@ export default {
 .clickable-color {
   color: #01579b;
 }
+
+.less-border {
+  padding: 10px !important;
+  margin: 0px !important;
+}
 </style>

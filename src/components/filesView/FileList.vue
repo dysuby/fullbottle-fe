@@ -4,9 +4,9 @@
     :headers="headers"
     :items="entries"
     :loading="loading"
+    :show-select="canSelect"
     loading-text="loading..."
     item-key="key"
-    show-select
     disable-pagination
     disable-sort
     hide-default-footer
@@ -31,7 +31,7 @@
     <template v-slot:item.action="{ item }">
       <slot name="itemAction" :item="item"></slot>
     </template>
-    <template v-slot:no-data>You have no files here</template>
+    <template v-slot:no-data>There is no file here</template>
   </v-data-table>
 </template>
 
@@ -41,7 +41,7 @@ import { FromUnixSeconds } from '@/util/day';
 import { SizeUnitConv } from '@/util/file';
 
 export default {
-  props: ['files', 'folders', 'loading', 'value'],
+  props: ['files', 'folders', 'loading', 'value', 'canSelect'],
 
   data: function() {
     return {

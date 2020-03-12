@@ -1,4 +1,10 @@
-import { email, minLength, maxLength, sameAs } from 'vuelidate/lib/validators';
+import {
+  email,
+  minLength,
+  maxLength,
+  sameAs,
+  integer,
+} from 'vuelidate/lib/validators';
 
 const errorMsg = {
   required: field => `${field} is required`,
@@ -7,6 +13,7 @@ const errorMsg = {
   minLength: (field, param) => `${field} length should more than ${param}`,
   sameAs: (field, param) => `${field} should be same as ${param}`,
   noSlash: field => `${field} cannot contain / or \\`,
+  positiveInt: field => `${field} should be a positive integer`,
 };
 
 const paramsMap = {
@@ -67,5 +74,13 @@ export const Validations = {
   entryName: {
     maxLength: maxLength(100),
     noSlash: value => value.indexOf('/') === -1 && value.indexOf('\\') === -1,
+  },
+
+  accessCode: {
+    maxLength: maxLength(6),
+  },
+
+  expire: {
+    positiveInt: value => integer(value) && value > 0,
   },
 };

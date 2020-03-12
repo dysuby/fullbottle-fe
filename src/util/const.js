@@ -46,3 +46,10 @@ export const extFileType = function(filename) {
 
   return 'unknown';
 };
+
+export const ObjStatus = {
+  1: 'invalid',
+  2: 'valid',
+  3: 'expired',
+  4: 'canceled',
+};

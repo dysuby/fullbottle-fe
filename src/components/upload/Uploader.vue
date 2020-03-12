@@ -209,14 +209,14 @@ export default {
     },
 
     preprocess: async function(file) {
-      const resp = await GetUploadToken({
+      const data = await GetUploadToken({
         folder_id: this.currentFolder.id,
         filename: file.name,
         mime: file.fileType,
         hash: file.hash,
         size: file.size,
       });
-      const result = resp.data.result;
+      const result = data.result;
 
       file.uploadToken = result.token;
       if (!result.need_upload) {

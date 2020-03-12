@@ -24,17 +24,6 @@ export default {
     };
   },
 
-  // computed: {
-  //   dialog: {
-  //     get: function() {
-  //       return this.value;
-  //     },
-  //     set: function(value) {
-  //       this.$emit('input', value);
-  //     },
-  //   },
-  // },
-
   watch: {
     entry: async function() {
       const fileType = extFileType(this.entry.name);

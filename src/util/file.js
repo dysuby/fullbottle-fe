@@ -5,7 +5,7 @@ export const CHUNK_SIZE = 1 << 20;
 export function SizeUnitConv(byteSize) {
   const unit = ['B', 'KB', 'MB', 'GB', 'TB'];
   let idx = 0;
-  while (byteSize > 1024) {
+  while (byteSize >= 1024) {
     if (idx === 4) {
       break;
     }

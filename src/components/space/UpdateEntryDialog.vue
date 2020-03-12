@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="dialog" max-width="400px">
+    <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title>Update {{entry.type}}</v-card-title>
 
@@ -85,6 +85,11 @@ export default {
 
   methods: {
     continueClick: async function() {
+      this.$v.$touch();
+      if (this.$v.$invalid) {
+        return;
+      }
+
       try {
         if (this.entry.type === 'folder') {
           await UpdateFolder({

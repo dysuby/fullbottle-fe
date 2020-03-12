@@ -26,38 +26,37 @@
 <script>
 import { mapState } from 'vuex';
 
-import { GetUserInfo } from '@/api/v1/user';
+import { GetUserAvartar } from '@/api/v1/user';
 import { DEFAULT_AVATAR } from '@/util/const';
 import { ToastError } from '@/util/toast';
 
 export default {
+  data: function() {
+    return {
+      avatar: DEFAULT_AVATAR,
+    };
+  },
+
   computed: mapState(['userAvatar']),
+
+  created: async function() {
+    await this.fetchAvatar();
+  },
 
   methods: {
     logout: function() {
       this.$store.commit('logout');
-      localStorage.removeItem('auth-info');
       this.$router.push('/login');
     },
 
-    fetchProfile: async function() {
-      if (this.userAvatar != DEFAULT_AVATAR) {
-        return;
-      }
+    fetchAvatar: async function() {
       try {
-        const data = await GetUserInfo();
-        const result = data.result;
-        if (result.avatar_fid) {
-          this.$store.commit('updateAvatar');
-        }
+        const avatar = await GetUserAvartar(this.$store.getters.uid);
+        this.$store.commit('refreshAvatar', avatar);
       } catch (error) {
         ToastError(error);
       }
     },
-  },
-
-  created: async function() {
-    await this.fetchProfile();
   },
 };
 </script>

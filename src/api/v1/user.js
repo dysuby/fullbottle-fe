@@ -19,7 +19,7 @@ export function GetUserAvartar(uid) {
     url: `/v1/users/avatar?uid=${uid}`,
     responseType: 'blob',
   }).then(data => {
-    if (!data) return DEFAULT_AVATAR;
+    if (!data.size) return DEFAULT_AVATAR;
     return URL.createObjectURL(data);
   });
 }

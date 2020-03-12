@@ -13,14 +13,12 @@
             <v-window-item :value="2">
               <div class="subtitle-1 black--text">
                 Share successfully! Your share token is
-                <span
-                  class="body-1 black--text font-weight-bold"
-                >
-                  {{token}}
-                  <v-btn icon small @click="copy">
-                    <v-icon>mdi-content-copy</v-icon>
-                  </v-btn>
-                </span>
+                <router-link :to="`/share/${token}`">
+                  <span class="body-1 font-weight-bold">{{token}}</span>
+                </router-link>
+                <v-btn icon small @click="copy">
+                  <v-icon>mdi-content-copy</v-icon>
+                </v-btn>
               </div>
             </v-window-item>
           </v-window>

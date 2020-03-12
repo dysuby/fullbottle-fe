@@ -87,7 +87,6 @@ router.beforeEach((to, from, next) => {
         localStorage.clear();
         store.commit('logout');
       }
-      ToastError('Please login to continue');
       return next({
         path: '/login',
         query: { redirect: to.fullPath },

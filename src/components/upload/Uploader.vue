@@ -73,19 +73,14 @@
 
                       <v-spacer />
                       <v-col cols="auto">
-                        <v-btn
-                          v-if="attrs.paused"
-                          icon
-                          small
-                          @click="fileAction(file.id, 'resume')"
-                        >
+                        <v-btn v-if="attrs.paused" icon small @click="fileAction(file, 'resume')">
                           <v-icon>mdi-play</v-icon>
                         </v-btn>
                         <v-btn
                           v-else-if="attrs.error"
                           icon
                           small
-                          @click="fileAction(file.id, 'retry')"
+                          @click="fileAction(file, 'retry')"
                         >
                           <v-icon>mdi-replay</v-icon>
                         </v-btn>
@@ -93,7 +88,7 @@
                           v-else-if="attrs.isUploading"
                           icon
                           small
-                          @click="fileAction(file.id, 'pause')"
+                          @click="fileAction(file, 'pause')"
                         >
                           <v-icon>mdi-pause</v-icon>
                         </v-btn>
@@ -257,8 +252,11 @@ export default {
       document.getElementById('uploader-btn').click();
     },
 
-    fileAction: function(fileId, action) {
-      return this.$refs[`file${fileId}`][0][action]();
+    fileAction: function(file, action) {
+      if (file.customStatus === 'preparing') {
+        ToastInfo('Preparing, please wait a monment');
+      }
+      return this.$refs[`file${file.id}`][0][action]();
     },
 
     fileIcon: function(category) {

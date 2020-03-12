@@ -28,7 +28,7 @@ export default {
     entry: async function() {
       const fileType = extFileType(this.entry.name);
       if (fileType !== 'image' || this.entry.size > 5 << 20) {
-        ToastInfo('Only image small than 5mb can be previewd');
+        ToastInfo('Only image small than 5MB can be previewd');
         return;
       }
 

@@ -7,7 +7,8 @@
           <v-window v-model="step">
             <v-window-item :value="1">
               <share-form ref="form"></share-form>
-              <v-list></v-list>
+              <div class="subtitle-1">You will share following entries:</div>
+              <v-data-table :headers="headers" :items="entries"></v-data-table>
             </v-window-item>
 
             <v-window-item :value="2">
@@ -57,6 +58,17 @@ export default {
       token: '',
 
       loading: false,
+
+      headers: [
+        {
+          text: 'name',
+          value: 'name',
+        },
+        {
+          text: 'type',
+          value: 'type',
+        },
+      ],
     };
   },
 

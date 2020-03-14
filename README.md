@@ -1,5 +1,7 @@
 # fullbottle-fe
 
+> Frontend for fullbottle
+
 ## Project setup
 ```
 yarn install

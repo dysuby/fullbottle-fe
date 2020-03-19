@@ -207,7 +207,7 @@ export default {
       const data = await GetUploadToken({
         folder_id: this.currentFolder.id,
         filename: file.name,
-        mime: file.fileType,
+        mime: file.fileType || 'application/octet-stream',
         hash: file.hash,
         size: file.size,
       });

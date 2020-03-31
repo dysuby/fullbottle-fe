@@ -26,7 +26,7 @@ export default {
 
   watch: {
     entry: async function() {
-      const fileType = extFileType(this.entry.name);
+      const fileType = extFileType(this.entry.name.toLowerCase());
       if (fileType !== 'image' || this.entry.size > 5 << 20) {
         ToastInfo('Only image small than 5MB can be previewd');
         return;

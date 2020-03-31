@@ -134,6 +134,7 @@ export default {
 
         chunkSize: 1 << 20,
         forceChunkSize: true, // make every chunk size equal or less than chunkSize
+        allowDuplicateUploads: true,
 
         generateUniqueIdentifier: function(file) {
           return file.hash;
